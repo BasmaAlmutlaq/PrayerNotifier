@@ -1,0 +1,114 @@
+import android.app.AlarmManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.preference.EditTextPreference;
+import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
+import android.provider.Settings;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+
+public class SetFrag extends PreferenceFragment {
+    private static final int CALL_CODE = 0;
+    private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
+    public static final String prefs_silent = "silent";
+    public static final String prefs_noti = "noti";
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        addPreferencesFromResource(R.xml.prefs);
+        preferenceChangeListener=new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, @Nullable String key) {
+                if (key.equals(prefs_silent)){
+                    EditTextPreference editTextPreference = (EditTextPreference) findPreference(key);
+                    String t = editTextPreference.getText();
+                    long time = Long.valueOf(t);
+                    silent(time);
+                }
+                if (key.equals(prefs_noti)){
+                   // SwitchPreference switchPreference = (SwitchPreference) findPreference(key);
+                    boolean enablenoti = sharedPreferences.getBoolean(key,false);
+                    if(enablenoti){
+                        enableNotifications();
+                    }else {
+                        disableNotifications();
+                    }
+
+                }
+
+            }
+        };
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(preferenceChangeListener);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(preferenceChangeListener);
+    }
+
+    public void enableNotifications() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                notificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL);
+            }
+        }
+    }
+
+    private Object getSystemService(String notificationService) {
+        return null;
+    }
+
+    public void disableNotifications() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                notificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE);
+            } else {
+                notificationManager.cancelAll();
+            }
+        }
+    }
+    public void silent(long time){
+        NotificationManager notificationManager = (NotificationManager) getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if(notificationManager.isNotificationPolicyAccessGranted()){
+            AudioManager audioManager = (AudioManager) getActivity().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+            audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+            Intent intent = new Intent(getActivity(),SilentService.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(),0,intent, PendingIntent.FLAG_IMMUTABLE);
+            AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+            alarmManager.set(AlarmManager.RTC_WAKEUP,System.currentTimeMillis()+(time*60000),pendingIntent);
+            Toast.makeText(getActivity(),"you set your phone to silent for"+time+"minutes",Toast.LENGTH_SHORT).show();
+
+
+        }else{
+            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+            startActivityForResult(intent, CALL_CODE);
+
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==CALL_CODE){
+            Toast.makeText(getActivity(),"Access granted!",Toast.LENGTH_SHORT).show();
+        }
+    }
+}
