@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceCategory android:title="Your prayer time Settings">
+    <SwitchPreference
+        android:title="Default prayer times"
+        android:key="defaulttime"
+        android:summaryOn="default calculations based on location is on"
+        android:summaryOff="The default calculations is off"
+        android:defaultValue="true">
+    </SwitchPreference>
+    <SwitchPreference
+        android:title="Adjust your prayer time"
+        android:key="adjust"
+        android:summaryOn="Adjust the time manually"
+        android:summaryOff="Adjusting the time is off"
+        android:defaultValue="false">
+
+    </SwitchPreference>
+</PreferenceCategory>
+    <PreferenceCategory android:title="Silent your phone">
+        <EditTextPreference
+            android:title="Set your phone to silent"
+            android:key="silent"
+            android:summary="Choose the time to switch your phone to silent at"
+            android:selectAllOnFocus="true"
+            android:singleLine="true">
+
+        </EditTextPreference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Notifications">
+        <SwitchPreference
+            android:title="Allow Notifications"
+            android:defaultValue="false"
+            android:key="noti"
+            android:summaryOff="App wont send Notifications"
+            android:summaryOn="App will send Notifications"
+            >
+
+        </SwitchPreference>
+    </PreferenceCategory>
+
+</PreferenceScreen>
